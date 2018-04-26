@@ -1,4 +1,7 @@
 #include "calculate.h"
+#include <QFile>
+#include "dbservice.h"
+#include <QDebug>
 
 Calculate::Calculate(QObject *parent) : QObject(parent)
 {
@@ -22,10 +25,8 @@ QPoint Calculate::point() const
 
 void Calculate::run()
 {
-    QThread a;
-
     while (m_running) {
-        a.msleep(10);
+        this->thread()->msleep(10);
         move();
         qDebug() << m_point;
         emit sendPoint(m_point);
@@ -77,17 +78,26 @@ void Calculate::readFile()
     m_point.setY(60);
     isUp_ = true;
 
-    QFile file("position.txt");
-    if ((file.exists()) && (file.open(QIODevice::ReadOnly))) {
-        QRegExp rx("(\\ )");
-        QString line = file.readAll();
-        QStringList coordinates = line.split(rx);
-        if (coordinates.size() > 2) {
-            m_point.setX(coordinates.at(0).toInt());
-            m_point.setY(coordinates.at(1).toInt());
-            isUp_ = coordinates.at(2).toInt();
-        }
-
-        file.close();
+    DBService db;
+    QSqlQuery query = db.selectAllData("coord");
+    QSqlRecord rec = query.record();
+    while (query.next()) {
+        m_point.setX(query.value(rec.indexOf("x")).toInt());
+        m_point.setY(query.value(rec.indexOf("y")).toInt());
+        isUp_ = query.value(rec.indexOf("isUp")).toBool();
     }
+
+//    QFile file("position.txt");
+//    if ((file.exists()) && (file.open(QIODevice::ReadOnly))) {
+//        QRegExp rx("(\\ )");
+//        QString line = file.readAll();
+//        QStringList coordinates = line.split(rx);
+//        if (coordinates.size() > 2) {
+//            m_point.setX(coordinates.at(0).toInt());
+//            m_point.setY(coordinates.at(1).toInt());
+//            isUp_ = coordinates.at(2).toInt();
+//        }
+
+//        file.close();
+//    }
 }

@@ -9,6 +9,7 @@
 #include <QPainter>
 #include <QFile>
 #include <string>
+#include <QSignalSpy>
 
 namespace Ui {
 class MainWindow;
@@ -19,6 +20,18 @@ class MainWindow : public QMainWindow
     Q_OBJECT
     Q_PROPERTY(QPoint point READ point WRITE setPoint NOTIFY pointChanged)
 
+    Ui::MainWindow *ui;
+
+    QThread threadCalc;
+    QThread threadDraw;
+    Calculate calc;
+    DrawCircle drawCircle;
+
+    QPoint m_point;
+
+    QSignalSpy *m_spyThread;
+
+    void paintEvent(QPaintEvent *event);
 
 public:
     explicit MainWindow(QWidget *parent = 0);
@@ -36,15 +49,6 @@ private slots:
     void on_start_clicked();
     void on_stop_clicked();
 
-private:
-    Ui::MainWindow *ui;
-    QThread threadCalc;
-    QThread threadDraw;
-    Calculate calc;
-    DrawCircle drawCircle;
-    QPoint m_point;
-
-    void paintEvent(QPaintEvent *event);
 };
 
 #endif // MAINWINDOW_H

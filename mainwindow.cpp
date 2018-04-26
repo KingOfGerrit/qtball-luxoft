@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include "dbservice.h"
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -9,6 +10,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
     ui->setupUi(this);
 
+    m_spyThread = new QSignalSpy(&calc, SIGNAL(finished()));
+
     connect(&threadCalc, &QThread::started, &calc, &Calculate::run);
     connect(&threadDraw, &QThread::started, &drawCircle, &DrawCircle::run);
 
@@ -16,8 +19,9 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(&drawCircle, &DrawCircle::redraw, this, &MainWindow::redraw);
     //connect(this, SIGNAL(pointChanged(QPoint)), this, SLOT(repaint()));
 
-    connect(&calc, &Calculate::finished, &threadCalc, &QThread::quit);
-    connect(&drawCircle, &DrawCircle::finished, &threadDraw, &QThread::quit);
+    connect(&calc, &Calculate::finished, &threadCalc, &QThread::quit, Qt::DirectConnection);
+    connect(&drawCircle, &DrawCircle::finished, &threadDraw, &QThread::quit, Qt::DirectConnection);
+
     //connect(&threadCalc, &QThread::finished, &threadCalc, &QThread::deleteLater);
     //connect(&threadDraw, &QThread::finished, &threadDraw, &QThread::deleteLater);
 
@@ -27,12 +31,16 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
-    QFile file("position.txt");
-    if (file.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate)) {
-        std::string coordinates = std::to_string(m_point.x()) + ' ' + std::to_string(m_point.y()) + ' ' + std::to_string(calc.isUp());
-        file.write(coordinates.c_str());
-        file.close();
-    }
+    calc.setRunning(false);
+    drawCircle.setRunning(false);
+    threadCalc.wait();
+    threadDraw.wait();
+
+    qDebug() << "Spy thread:" << m_spyThread->count();
+    delete m_spyThread;
+
+    DBService db;
+    db.updateData(m_point, calc.isUp());
 
     delete ui;
 }

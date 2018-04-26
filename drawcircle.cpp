@@ -12,10 +12,8 @@ bool DrawCircle::running() const
 
 void DrawCircle::run()
 {
-    QThread a;
-
     while (m_running) {
-        a.msleep(10);
+        this->thread()->msleep(10);
         emit redraw();
     }
 

@@ -2,10 +2,8 @@
 #define CALCULATE_H
 
 #include <QObject>
-#include <QDebug>
 #include <QThread>
-#include <QMainWindow>
-#include <QFile>
+#include <QtCore>
 
 class Calculate : public QObject
 {

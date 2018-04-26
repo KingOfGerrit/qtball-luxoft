@@ -1,0 +1,92 @@
+@startuml
+
+title QtBall
+
+class MainWindow {
+    +explicit MainWindow(QWidget *parent = 0);
+    +~MainWindow();
+    +QPoint point() const;
+    +void setPoint(QPoint point);
+    +void redraw();
+
+    +void pointChanged(QPoint point);
+
+    -Ui::MainWindow *ui;
+    -QThread threadCalc;
+    -QThread threadDraw;
+    -Calculate calc;
+    -DrawCircle drawCircle;
+
+    -QPoint m_point;
+
+    -QSignalSpy *m_spyThread;
+
+    -void paintEvent(QPaintEvent *event);
+
+    -void on_start_clicked();
+    -void on_stop_clicked();
+
+}
+
+class DrawCircle {
+    +explicit DrawCircle(QObject *parent = 0);
+    +bool running() const;
+
+    +void run();
+    +void setRunning(bool running);
+
+    +void finished();
+    +void redraw();
+    +void runningChanged(bool running);
+
+    -bool m_running;
+}
+
+class Calculate {
+    +explicit Calculate(QObject *parent = 0);
+    +QPoint point() const;
+    +bool running() const;
+    +bool isUp() const;
+
+    +void finished();
+    +void sendPoint(QPoint point);
+    +void runningChanged(bool running);
+    +void pointChanged(QPoint point);
+
+    +void run();
+    +void setRunning(bool running);
+    +void setPoint(QPoint point);
+
+    -QPoint m_point;
+    -bool m_running;
+    -bool isUp_;
+
+    -void move();
+    -void readFile();
+}
+
+class DBService {
+    +explicit DBService();
+    +QSqlQuery selectAllData(QString table);
+    +~DBService();
+    +void updateData(QPoint point, bool isUp);
+
+    -QSqlDatabase m_db;
+    -void createInitDB();
+    -void addInitData();
+}
+
+class QObject
+class QMainWindow
+class QThread
+
+DrawCircle <|-up- QObject
+Calculate "1..*" o-up- DBService
+Calculate <|-up- QObject
+MainWindow "1..*" o-up- DBService
+MainWindow "1..1" *-up- DrawCircle
+MainWindow "1..1" *-up- Calculate
+MainWindow <|- QMainWindow
+MainWindow "1..*" *-left- QThread
+
+@enduml
